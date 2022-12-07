@@ -39,7 +39,7 @@ def send_message(bot, message):
     except Exception:
         logging.error('Ошибка отправки сообщения')
     else:
-        logging.info('Сообщение отправлено')
+        logging.debug('Сообщение отправлено')
 
 
 def get_api_answer(timestamp):
@@ -115,15 +115,13 @@ def main():
         sys.exit(0)
     while True:
         bot = telegram.Bot(token=TELEGRAM_TOKEN)
-        timestamp = 1670095453  # бот не работает при int(time.time())
+        timestamp = int(time.time())
         try:
             response = get_api_answer(timestamp)
             logging.info('Получен ответ API')
             homework = check_response(response)
             if not homework:
-                bot_message = 'Новых заданий нет'
-                logging.info(bot_message)
-                send_message(bot, bot_message)
+                logging.info('Новых заданий нет')
             else:
                 bot_message = parse_status(homework)
                 send_message(bot, bot_message)
@@ -138,7 +136,7 @@ def main():
 
 if __name__ == '__main__':
     logging.basicConfig(
-        level=logging.INFO,
+        level=logging.DEBUG,
         format='%(asctime)s, %(levelname)s, %(message)s',
         handlers=[
             logging.FileHandler('output.log'),
