@@ -67,21 +67,16 @@ def check_response(response):
     Получает ответ API, приведенный к типам данных Python.
     """
     if not isinstance(response, dict):
-        logging.error('Объект не является словарем')
         raise TypeError('Объект не является словарем')
     if 'homeworks' not in response:
-        logging.error('Ключ не найден')
         raise KeyError('Ключ homeworks не найден')
-    else:
-        homeworks = response.get('homeworks')
+    homeworks = response.get('homeworks')
     if not isinstance(homeworks, list):
-        logging.error('Список не найден')
         raise TypeError('Список не найден')
-    if not homeworks == []:
-        homework = homeworks[0]
-        return homework
-    else:
-        logging.error('Список пуст')
+    if not homeworks:
+        raise IndexError('Список пуст')
+    homework = homeworks[0]
+    return homework
 
 
 def parse_status(homework):
@@ -92,19 +87,15 @@ def parse_status(homework):
     if not isinstance(homework, dict):
         raise TypeError('Неверный формат данных. Объект не является словарем.')
     if 'homework_name' not in homework:
-        logging.error('Отсутствует ключ homework_name.')
         raise KeyError('Отсутствует ключ homework_name. '
                        'Возможно, словарь пуст.')
-    else:
-        homework_name = homework.get('homework_name')
-        status = homework.get('status')
+    homework_name = homework.get('homework_name')
+    status = homework.get('status')
     if status not in HOMEWORK_VERDICTS:
-        logging.error('Неизвестный статус домашней работы')
         raise KeyError('Неизвестный статус домашней работы')
-    else:
-        verdict = HOMEWORK_VERDICTS[status]
-        return ('Изменился статус проверки работы '
-                f'"{homework_name}". {verdict}')
+    verdict = HOMEWORK_VERDICTS[status]
+    return ('Изменился статус проверки работы '
+            f'"{homework_name}". {verdict}')
 
 
 def main():
@@ -113,9 +104,9 @@ def main():
     if not check_tokens():
         logging.critical('Ошибка проверки переменных окружения')
         sys.exit(0)
+    timestamp = int(time.time())
+    bot = telegram.Bot(token=TELEGRAM_TOKEN)
     while True:
-        bot = telegram.Bot(token=TELEGRAM_TOKEN)
-        timestamp = int(time.time())
         try:
             response = get_api_answer(timestamp)
             logging.info('Получен ответ API')
@@ -125,10 +116,9 @@ def main():
             else:
                 bot_message = parse_status(homework)
                 send_message(bot, bot_message)
-                timestamp = response['current_date']
+                # timestamp = response['current_date']
         except Exception as error:
             message = f'Сбой в работе программы: {error}'
-            send_message(bot, message)
             logging.critical(message)
         finally:
             time.sleep(RETRY_PERIOD)
